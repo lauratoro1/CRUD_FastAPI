@@ -1,9 +1,12 @@
 from typing import List
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.orm import Session
+from fastapi.responses import StreamingResponse
+import csv
+import io
 
 from ..database import get_db
-from ..views.persona import PersonaCreate, PersonaUpdate, PersonaRead
+from ..views.persona import PersonaCreate, PersonaUpdate, PersonaRead, PoblarRequest
 from ..services import persona_service
 
 router = APIRouter(prefix="/personas", tags=["personas"])
@@ -43,3 +46,11 @@ def delete_persona(persona_id: int, db: Session = Depends(get_db)):
     """Delete a Persona by ID via service layer."""
     persona_service.delete_persona(db, persona_id)
     return None
+
+
+# New endpoint for populating database with Faker data
+@router.post("/poblar", status_code=status.HTTP_201_CREATED)
+def poblar_datos(request: PoblarRequest, db: Session = Depends(get_db)):
+    """New endpoint: Populate database with Faker data"""
+    created = persona_service.poblar_db(db, request.cantidad)
+    return {"message": f"{created} users created successfully", "status": 201}
