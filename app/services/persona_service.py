@@ -166,3 +166,26 @@ def estadisticas_for_domain(db: Session) -> Dict[str, int]:
         func.count(Persona.id).label('count')
     ).group_by('domain').all()
     return {row.domain: row.count for row in resultados}
+
+
+# NEW: Age statistics function
+def estadisticas_age(db: Session) -> Dict[str, int]:
+    """Calculate average, minimum and maximum age"""
+    hoy = date.today()
+    personas = db.query(Persona.birth_date).all()
+    
+    if not personas:
+        return {"average_age": 0, "min_age": 0, "max_age": 0}
+    
+    edades = []
+    for p in personas:
+        edad = hoy.year - p.birth_date.year
+        if (hoy.month, hoy.day) < (p.birth_date.month, p.birth_date.day):
+            edad -= 1
+        edades.append(edad)
+    
+    return {
+        "average_age": round(sum(edades) / len(edades)),
+        "min_age": min(edades),
+        "max_age": max(edades)
+    }
