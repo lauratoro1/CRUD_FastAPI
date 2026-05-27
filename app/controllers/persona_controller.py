@@ -91,3 +91,12 @@ def buscar_termino(termino: str, db: Session = Depends(get_db)):
 def reporte_activos(db: Session = Depends(get_db)):
     """NEW: REPORT of active users with reduced projection (id, name, email)"""
     return persona_service.reporte_activos(db)
+
+#NEW: Endpoint for birthdays in a specific month 
+@router.get("/cumpleanios/mes/{numero_mes}")
+def cumpleanios_mes(numero_mes: int, db: Session = Depends(get_db)):
+    """NEW 7: List of people with birthdays in a specific month (1-12)"""
+    if numero_mes < 1 or numero_mes > 12:
+        raise HTTPException(status_code=400, detail="Número de mes inválido. Debe estar entre 1 y 12.")
+    resultados = persona_service.cumpleanios_por_mes(db, numero_mes)
+    return resultados
