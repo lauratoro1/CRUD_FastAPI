@@ -137,3 +137,9 @@ def exportar_csv(db: Session = Depends(get_db)):
     headers = {'Content-Disposition': 'attachment; filename="personas.csv"'}
     
     return StreamingResponse(buffer, media_type="text/csv", headers=headers)
+
+#NEW: Endpoint for percentage of active vs inactive users
+@router.get("/analitica/activos-porcentaje")
+def activos_porcentaje(db: Session = Depends(get_db)):
+    """NEW: Percentage of active vs inactive users"""
+    return persona_service.activos_porcentaje(db)
