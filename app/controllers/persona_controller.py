@@ -6,7 +6,7 @@ import csv
 import io
 
 from ..database import get_db
-from ..views.persona import PersonaCreate, PersonaUpdate, PersonaRead, PoblarRequest
+from ..views.persona import PersonaCreate, PersonaUpdate, PersonaRead, PoblarRequest, BulkDesactivarRequest
 from ..services import persona_service
 
 router = APIRouter(prefix="/personas", tags=["personas"])
@@ -100,3 +100,22 @@ def cumpleanios_mes(numero_mes: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Número de mes inválido. Debe estar entre 1 y 12.")
     resultados = persona_service.cumpleanios_por_mes(db, numero_mes)
     return resultados
+
+#NEW: Endpoint for bulk deactivation of users by list of IDs
+@router.patch("/bulk/desactivar")
+def desactivar_masivo(request: BulkDesactivarRequest, db: Session = Depends(get_db)):
+    """NEW 8: Bulk deactivation of users by list of IDs (max 100)"""
+    if not request.ids or len(request.ids) > 100:
+        raise HTTPException(
+            status_code=400, 
+            detail="La lista de IDs debe tener entre 1 y 100 elementos."
+        )
+    
+    desactivados, no_encontrados = persona_service.desactivar_masivo(db, request.ids)
+    
+    return {
+        "message": "Operación completada.",
+        "desactivados": desactivados,
+        "no_encontrados": no_encontrados,
+        "total_desactivados": len(desactivados)
+    }
