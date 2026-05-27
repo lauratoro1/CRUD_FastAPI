@@ -46,3 +46,7 @@ class PersonaRead(BaseModel):
 class PoblarRequest(BaseModel):
     """Schema used for requesting bulk data generation."""
     cantidad: int = Field(..., gt=0, le=1000)
+    
+class BulkDesactivarRequest(BaseModel):
+    """Schema for bulk deactivation request"""
+    ids: List[int]
