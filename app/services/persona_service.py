@@ -189,3 +189,13 @@ def estadisticas_age(db: Session) -> Dict[str, int]:
         "min_age": min(edades),
         "max_age": max(edades)
     }
+
+# NEW: General search function
+def buscar_termino(db: Session, termino: str) -> List[Persona]:
+    """Search in first_name, last_name or email"""
+    like_term = f"%{termino}%"
+    return db.query(Persona).filter(
+        (Persona.first_name.like(like_term)) |
+        (Persona.last_name.like(like_term)) |
+        (Persona.email.like(like_term))
+    ).all()
