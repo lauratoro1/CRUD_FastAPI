@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from pydantic import BaseModel, Field, EmailStr
-
+from typing import List
 
 class PersonaBase(BaseModel):
     """Shared attributes for Persona inputs."""
@@ -42,3 +42,7 @@ class PersonaRead(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+class PoblarRequest(BaseModel):
+    """Schema used for requesting bulk data generation."""
+    cantidad: int = Field(..., gt=0, le=1000)
