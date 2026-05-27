@@ -156,3 +156,13 @@ def reset_db(db: Session) -> int:
     deleted_count = db.query(Persona).delete()
     db.commit()
     return deleted_count
+
+
+# NEW: Statistics by email domain function
+def estadisticas_for_domain(db: Session) -> Dict[str, int]:
+    """Count of people by email domain"""
+    resultados = db.query(
+        func.substring_index(Persona.email, '@', -1).label('domain'),
+        func.count(Persona.id).label('count')
+    ).group_by('domain').all()
+    return {row.domain: row.count for row in resultados}
