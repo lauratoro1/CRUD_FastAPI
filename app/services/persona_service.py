@@ -1,11 +1,16 @@
-from typing import Sequence
+from typing import Sequence, Dict, Any, List, Tuple
+from datetime import date, datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func, extract, or_
+import random
+from faker import Faker
+from unidecode import unidecode 
+from sqlalchemy import text
 
 from ..models.persona import Persona
 from ..views.persona import PersonaCreate, PersonaUpdate
 from .errors import PersonaNotFoundError, EmailAlreadyExistsError
-
 
 def create_persona(db: Session, payload: PersonaCreate) -> Persona:
     """Create a Persona ensuring unique email."""
@@ -76,3 +81,70 @@ def delete_persona(db: Session, persona_id: int) -> None:
         raise PersonaNotFoundError()
     db.delete(obj)
     db.commit()
+
+
+# New function to populate database with Faker data
+def poblar_db(db: Session, cantidad: int) -> int:
+    """Generate fake persons with Faker and reset ID to 1 for MySQL"""
+    
+    # SOLUTION TO ERROR: Detect the real table name and disable foreign key checks
+    nombre_tabla = Persona.__tablename__
+    
+    try:
+        # 1. Disable foreign key checks
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+        # 2. Clear table and reset AUTO_INCREMENT
+        db.execute(text(f"TRUNCATE TABLE {nombre_tabla};"))
+        # 3. Enable foreign key checks
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        # If TRUNCATE fails due to severe restrictions, use DELETE + ALTER
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+        db.execute(text(f"DELETE FROM {nombre_tabla};"))
+        db.execute(text(f"ALTER TABLE {nombre_tabla} AUTO_INCREMENT = 1;"))
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
+        db.commit()
+
+    fake = Faker('es_CO')
+    dominios_reales = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com']
+    
+    emails_existentes = set()
+    personas_a_crear = []
+    
+    for _ in range(cantidad):
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        
+        nombre_limpio = unidecode(first_name.lower().replace(" ", ""))
+        apellido_limpio = unidecode(last_name.lower().replace(" ", ""))
+        
+        dominio = random.choice(dominios_reales)
+        email_base = f"{nombre_limpio}.{apellido_limpio}"
+        email = f"{email_base}@{dominio}"
+        
+        contador = 1
+        while email in emails_existentes:
+            email = f"{nombre_limpio}.{apellido_limpio}{contador}@{dominio}"
+            contador += 1
+            
+        emails_existentes.add(email)
+        
+        prefijo_celular = random.choice(['300', '301', '310', '315', '320', '350'])
+        numero_celular = f"{prefijo_celular}{random.randint(1000000, 9999999)}"
+        
+        persona = Persona(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone=numero_celular,
+            birth_date=fake.date_of_birth(minimum_age=18, maximum_age=85),
+            is_active=random.choice([True, False]),
+            notes=fake.sentence() if random.random() > 0.2 else None
+        )
+        personas_a_crear.append(persona)
+    
+    db.add_all(personas_a_crear)
+    db.commit()
+    return len(personas_a_crear)
