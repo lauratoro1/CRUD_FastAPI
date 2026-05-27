@@ -71,3 +71,10 @@ def poblar_datos(request: PoblarRequest, db: Session = Depends(get_db)):
 def estadisticas_dominios(db: Session = Depends(get_db)):
     """NEW: Statistics by email domain"""
     return persona_service.estadisticas_for_domain(db)
+
+
+# NEW: Endpoint for age statistics
+@router.get("/estadisticas/edad")
+def estadisticas_age(db: Session = Depends(get_db)):
+    """NEW: Age statistics (average, minimum, maximum)"""
+    return persona_service.estadisticas_age(db)
