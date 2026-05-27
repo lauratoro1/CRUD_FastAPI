@@ -243,3 +243,8 @@ def desactivar_masivo(db: Session, ids: List[int]) -> Tuple[List[int], List[int]
         db.commit()
     
     return ids_existentes, ids_no_encontrados
+
+#NEW: Function to export all records for CSV
+def exportar_todos(db: Session) -> List[Persona]:
+    """Retorna todos los registros para exportar a CSV"""
+    return db.query(Persona).all()
