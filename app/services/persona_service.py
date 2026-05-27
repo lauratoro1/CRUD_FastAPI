@@ -227,3 +227,19 @@ def cumpleanios_por_mes(db: Session, numero_mes: int) -> List[Persona]:
     return db.query(Persona).filter(
         extract('month', Persona.birth_date) == numero_mes
     ).all()
+    
+#NEW: Function for bulk deactivation of users by list of IDs
+def desactivar_masivo(db: Session, ids: List[int]) -> Tuple[List[int], List[int]]:
+    """Desactiva usuarios por lista de IDs"""
+    personas = db.query(Persona).filter(Persona.id.in_(ids)).all()
+    ids_existentes = [p.id for p in personas]
+    ids_no_encontrados = [id for id in ids if id not in ids_existentes]
+    
+    if ids_existentes:
+        db.query(Persona).filter(Persona.id.in_(ids_existentes)).update(
+            {"is_active": False}, 
+            synchronize_session=False
+        )
+        db.commit()
+    
+    return ids_existentes, ids_no_encontrados
