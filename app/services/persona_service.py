@@ -220,3 +220,10 @@ def reporte_activos(db: Session) -> List[Dict[str, Any]]:
         }
         for r in resultados
     ]
+    
+#NEW: Function to list people with birthdays in a specific month
+def cumpleanios_por_mes(db: Session, numero_mes: int) -> List[Persona]:
+    """Personas que cumplen años en el mes especificado"""
+    return db.query(Persona).filter(
+        extract('month', Persona.birth_date) == numero_mes
+    ).all()
