@@ -199,3 +199,24 @@ def buscar_termino(db: Session, termino: str) -> List[Persona]:
         (Persona.last_name.like(like_term)) |
         (Persona.email.like(like_term))
     ).all()
+    
+    
+# NEW: Report of active users with reduced projection
+def reporte_activos(db: Session) -> List[Dict[str, Any]]:
+    """Usuarios activos con proyección reducida"""
+    resultados = db.query(
+        Persona.id,
+        Persona.email,
+        Persona.phone,
+        Persona.is_active
+    ).filter(Persona.is_active == True).all()
+    
+    return [
+        {
+            "id": r.id,
+            "email": r.email,
+            "phone": r.phone,
+            "is_active": r.is_active
+        }
+        for r in resultados
+    ]
