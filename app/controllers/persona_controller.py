@@ -64,3 +64,10 @@ def poblar_datos(request: PoblarRequest, db: Session = Depends(get_db)):
     """NEW: Populate database with Faker data"""
     created = persona_service.poblar_db(db, request.cantidad)
     return {"message": f"{created} users created successfully", "status": 201}
+
+
+# NEW: Endpoint for statistics by email domain
+@router.get("/estadisticas/dominios")
+def estadisticas_dominios(db: Session = Depends(get_db)):
+    """NEW: Statistics by email domain"""
+    return persona_service.estadisticas_for_domain(db)
