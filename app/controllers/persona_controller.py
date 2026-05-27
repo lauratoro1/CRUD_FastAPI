@@ -119,3 +119,21 @@ def desactivar_masivo(request: BulkDesactivarRequest, db: Session = Depends(get_
         "no_encontrados": no_encontrados,
         "total_desactivados": len(desactivados)
     }
+    
+#NEW: Endpoint to export all records to CSV
+@router.get("/exportar/csv")
+def exportar_csv(db: Session = Depends(get_db)):
+    """NEW: Export all records to CSV file for download"""
+    personas = persona_service.exportar_todos(db)
+    
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(['id', 'first_name', 'last_name', 'email', 'phone', 'birth_date', 'is_active', 'notes'])
+    
+    for p in personas:
+        writer.writerow([p.id, p.first_name, p.last_name, p.email, p.phone, p.birth_date, p.is_active, p.notes if p.notes else ''])
+    
+    buffer.seek(0)
+    headers = {'Content-Disposition': 'attachment; filename="personas.csv"'}
+    
+    return StreamingResponse(buffer, media_type="text/csv", headers=headers)
