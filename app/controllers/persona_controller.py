@@ -78,3 +78,10 @@ def estadisticas_dominios(db: Session = Depends(get_db)):
 def estadisticas_age(db: Session = Depends(get_db)):
     """NEW: Age statistics (average, minimum, maximum)"""
     return persona_service.estadisticas_age(db)
+
+# NEW: Endpoint for general search
+@router.get("/buscar/{termino}")
+def buscar_termino(termino: str, db: Session = Depends(get_db)):
+    """NEW: General search (name, last name, email)"""
+    resultados = persona_service.buscar_termino(db, termino)
+    return resultados
