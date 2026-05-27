@@ -148,3 +148,11 @@ def poblar_db(db: Session, cantidad: int) -> int:
     db.add_all(personas_a_crear)
     db.commit()
     return len(personas_a_crear)
+
+
+# NEW: Reset database function
+def reset_db(db: Session) -> int:
+    """Delete all records from the personas table"""
+    deleted_count = db.query(Persona).delete()
+    db.commit()
+    return deleted_count
