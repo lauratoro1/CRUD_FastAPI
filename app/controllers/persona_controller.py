@@ -85,3 +85,9 @@ def buscar_termino(termino: str, db: Session = Depends(get_db)):
     """NEW: General search (name, last name, email)"""
     resultados = persona_service.buscar_termino(db, termino)
     return resultados
+
+# NEW: Endpoint for active users report with reduced projection
+@router.get("/reporte/activos")
+def reporte_activos(db: Session = Depends(get_db)):
+    """NEW: REPORT of active users with reduced projection (id, name, email)"""
+    return persona_service.reporte_activos(db)
