@@ -1,29 +1,38 @@
 import os
-from urllib.parse import urlparse
-
-import pymysql
 from dotenv import load_dotenv
+import pymysql
 
-# Load .env
+# Load environment variables
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise SystemExit("DATABASE_URL not set in environment")
+# Read individual parameters with default values
+db_host = os.getenv("DB_HOST", "localhost")
+db_port = int(os.getenv("DB_PORT", 3306))
+db_user = os.getenv("DB_USER", "root")
+db_password = os.getenv("DB_PASSWORD", "your_password_here")
+db_name = os.getenv("DB_NAME", "fastapi_demo")
 
-# Expect format: mysql+pymysql://user:pass@host:port/dbname
-parsed = urlparse(DATABASE_URL.replace("+pymysql", ""))
-user = parsed.username or "root"
-password = parsed.password or ""
-host = parsed.hostname or "localhost"
-port = int(parsed.port or 3306)
-db_name = parsed.path.lstrip("/") or "fastapi_demo"
-
-# Connect without selecting a DB and create if not exists
-conn = pymysql.connect(host=host, user=user, password=password, port=port, cursorclass=pymysql.cursors.Cursor, autocommit=True)
+# Connect to MySQL server to ensure the database exists
 try:
+    conn = pymysql.connect(
+        host=db_host,
+        port=db_port,
+        user=db_user,
+        password=db_password,
+        autocommit=True
+    )
+    
     with conn.cursor() as cur:
-        cur.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}` CHARACTER SET utf8mb4;")
+        sql = f"CREATE DATABASE IF NOT EXISTS `{db_name}` CHARACTER SET utf8mb4;"
+        cur.execute(sql)
         print(f"Database ensured: {db_name}")
+        
+except pymysql.MySQLError as e:
+    print(f"Error while connecting or creating the database: {e}")
+    
 finally:
-    conn.close()
+    if 'conn' in locals() and conn.open:
+        conn.close()
+
+# Final URL that SQLAlchemy must consume (includes mysql+pymysql!)
+DATABASE_URL = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
