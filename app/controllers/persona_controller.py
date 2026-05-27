@@ -40,6 +40,16 @@ def update_persona(persona_id: int, persona_in: PersonaUpdate, db: Session = Dep
     """Update an existing Persona (partial) via service layer."""
     return persona_service.update_persona(db, persona_id, persona_in)
 
+# NEW: Reset database endpoint
+# IMPORTANT: /reset must go BEFORE /{persona_id}
+@router.delete("/reset")
+def resetear_base(db: Session = Depends(get_db)):
+    """NEW: Delete all records (RESET)"""
+    deleted_count = persona_service.reset_db(db)
+    return {
+        "message": "Database cleaned. All records deleted.",
+        "deleted_count": deleted_count
+    }
 
 @router.delete("/{persona_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_persona(persona_id: int, db: Session = Depends(get_db)):
@@ -48,9 +58,9 @@ def delete_persona(persona_id: int, db: Session = Depends(get_db)):
     return None
 
 
-# New endpoint for populating database with Faker data
+# NEW: Endpoint for populating database with Faker data
 @router.post("/poblar", status_code=status.HTTP_201_CREATED)
 def poblar_datos(request: PoblarRequest, db: Session = Depends(get_db)):
-    """New endpoint: Populate database with Faker data"""
+    """NEW: Populate database with Faker data"""
     created = persona_service.poblar_db(db, request.cantidad)
     return {"message": f"{created} users created successfully", "status": 201}
