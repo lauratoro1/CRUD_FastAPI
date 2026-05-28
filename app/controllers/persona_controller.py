@@ -175,3 +175,13 @@ def exportar_json(db: Session = Depends(get_db)):
     """EXTRA 14: Exportar todos los registros a JSON"""
     return persona_service.exportar_json(db)
 
+# NEW: Endpoint for searching by birth date range
+@router.get("/fechas/rango/{fecha_inicio}/{fecha_fin}")
+def buscar_por_rango_fechas(
+    fecha_inicio: str,
+    fecha_fin: str,
+    db: Session = Depends(get_db)
+):
+    """EXTRA 15: Buscar personas nacidas entre dos fechas (formato: YYYY-MM-DD)"""
+    return persona_service.buscar_por_rango_fechas(db, fecha_inicio, fecha_fin)
+
