@@ -159,3 +159,12 @@ def personas_sin_notas(
 ):
     """EXTRA 12: Personas que no tienen notas (notes = null)"""
     return persona_service.personas_sin_notas(db, skip, limit)
+
+# NEW: Endpoint for top N email domains
+@router.get("/estadisticas/top-dominios")
+def top_dominios(
+    limite: int = Query(5, ge=1, le=20),
+    db: Session = Depends(get_db)
+):
+    """EXTRA 13: Top N dominios de email más usados"""
+    return persona_service.top_dominios(db, limite)
