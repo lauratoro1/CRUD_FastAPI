@@ -143,3 +143,9 @@ def exportar_csv(db: Session = Depends(get_db)):
 def activos_porcentaje(db: Session = Depends(get_db)):
     """NEW: Percentage of active vs inactive users"""
     return persona_service.activos_porcentaje(db)
+
+# NEW: Endpoint for distribution of users by age range
+@router.get("/analitica/rangos-edad")
+def rangos_edad(db: Session = Depends(get_db)):
+    """EXTRA 11: Distribución de personas por rangos de edad"""
+    return persona_service.rangos_edad(db)
