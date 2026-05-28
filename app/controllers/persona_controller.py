@@ -168,3 +168,10 @@ def top_dominios(
 ):
     """EXTRA 13: Top N dominios de email más usados"""
     return persona_service.top_dominios(db, limite)
+
+# NEW: Endpoint for export to JSON
+@router.get("/exportar/json")
+def exportar_json(db: Session = Depends(get_db)):
+    """EXTRA 14: Exportar todos los registros a JSON"""
+    return persona_service.exportar_json(db)
+
