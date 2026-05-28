@@ -248,3 +248,28 @@ def desactivar_masivo(db: Session, ids: List[int]) -> Tuple[List[int], List[int]
 def exportar_todos(db: Session) -> List[Persona]:
     """Retorna todos los registros para exportar a CSV"""
     return db.query(Persona).all()
+
+#NEW: Function to calculate percentage of active/inactive users
+def activos_porcentaje(db: Session) -> Dict[str, Any]:
+    """Calcula el porcentaje de usuarios activos e inactivos"""
+    total = db.query(Persona).count()
+    
+    if total == 0:
+        return {
+            "active": 0,
+            "inactive": 0,
+            "percentage_active": 0,
+            "percentage_inactive": 0,
+            "total": 0
+        }
+    
+    activos = db.query(Persona).filter(Persona.is_active == True).count()
+    inactivos = total - activos
+    
+    return {
+        "active": activos,
+        "inactive": inactivos,
+        "percentage_active": round((activos / total) * 100, 2),
+        "percentage_inactive": round((inactivos / total) * 100, 2),
+        "total": total
+    }
