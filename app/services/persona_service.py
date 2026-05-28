@@ -411,6 +411,54 @@ def top_dominios(db: Session, limite: int = 5) -> Dict[str, Any]:
         "total_usuarios": total,
         "limite_solicitado": limite
     }
+
+# NEW: Function to export all users
+def exportar_json(db: Session) -> Dict[str, Any]:
+    """Exporta todos los registros a formato JSON estructurado"""
+    
+    personas = db.query(Persona).all()
+    
+    if not personas:
+        return {
+            "total_registros": 0,
+            "fecha_exportacion": str(date.today()),
+            "mensaje": "No hay usuarios registrados",
+            "datos": []
+        }
+    
+    datos_exportados = []
+    for p in personas:
+        hoy = date.today()
+        edad = hoy.year - p.birth_date.year
+        if (hoy.month, hoy.day) < (p.birth_date.month, p.birth_date.day):
+            edad -= 1
+        
+        datos_exportados.append({
+            "id": p.id,
+            "nombre_completo": f"{p.first_name} {p.last_name}",
+            "nombre": p.first_name,
+            "apellido": p.last_name,
+            "email": p.email,
+            "telefono": p.phone,
+            "fecha_nacimiento": str(p.birth_date),
+            "edad": edad,
+            "activo": p.is_active,
+            "estado": "Activo" if p.is_active else "Inactivo",
+            "notas": p.notes if p.notes else "",
+            "dominio_email": p.email.split('@')[1] if '@' in p.email else ""
+        })
+    
+    return {
+        "total_registros": len(datos_exportados),
+        "fecha_exportacion": str(date.today()),
+        "version_api": "1.0",
+        "datos": datos_exportados
+    }
+
+
+
+
+
 # NEW: Function to get users by birth date
 def buscar_por_rango_fechas(db: Session, fecha_inicio: str, fecha_fin: str) -> Dict[str, Any]:
     """Busca personas nacidas entre dos fechas"""
