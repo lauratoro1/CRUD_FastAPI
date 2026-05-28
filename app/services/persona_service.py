@@ -369,3 +369,45 @@ def personas_sin_notas(db: Session, skip: int = 0, limit: int = 100) -> Dict[str
         "skip": skip,
         "datos": datos
     }
+
+# NEW: Function to get top email domains
+def top_dominios(db: Session, limite: int = 5) -> Dict[str, Any]:
+    """Retorna el top N de dominios de email más utilizados"""
+    
+    resultados = db.query(
+        func.substring_index(Persona.email, '@', -1).label('dominio'),
+        func.count(Persona.id).label('cantidad')
+    ).group_by('dominio').order_by(
+        func.count(Persona.id).desc()
+    ).limit(limite).all()
+    
+    total = db.query(Persona).count()
+    
+    if total == 0:
+        return {
+            "top_dominios": [],
+            "total_usuarios": 0,
+            "mensaje": "No hay usuarios registrados"
+        }
+    
+    top_list = []
+    for row in resultados:
+        porcentaje = round((row.cantidad / total) * 100, 2)
+        top_list.append({
+            "dominio": row.dominio,
+            "cantidad": row.cantidad,
+            "porcentaje": porcentaje
+        })
+    
+    otros_total = total - sum(r.cantidad for r in resultados)
+    otros_porcentaje = round((otros_total / total) * 100, 2) if otros_total > 0 else 0
+    
+    return {
+        "top_dominios": top_list,
+        "otros": {
+            "cantidad": otros_total,
+            "porcentaje": otros_porcentaje
+        },
+        "total_usuarios": total,
+        "limite_solicitado": limite
+    }
