@@ -332,3 +332,40 @@ def rangos_edad(db: Session) -> Dict[str, Any]:
         "max_age": max(edades) if edades else 0,
         "ranges": resultado_rangos
     }
+
+# NEW: Function to get users without notes
+def personas_sin_notas(db: Session, skip: int = 0, limit: int = 100) -> Dict[str, Any]:
+    """Retorna personas que no tienen notas (notes = null o vacío)"""
+    
+    query = db.query(Persona).filter(
+        or_(
+            Persona.notes == None,
+            Persona.notes == ''
+        )
+    )
+    
+    total = query.count()
+    personas = query.offset(skip).limit(limit).all()
+    
+    datos = []
+    for p in personas:
+        datos.append({
+            "id": p.id,
+            "nombre_completo": f"{p.first_name} {p.last_name}",
+            "email": p.email,
+            "telefono": p.phone,
+            "activo": p.is_active,
+            "fecha_nacimiento": str(p.birth_date)
+        })
+    
+    total_general = db.query(Persona).count()
+    porcentaje = round((total / total_general) * 100, 2) if total_general > 0 else 0
+    
+    return {
+        "total_sin_notas": total,
+        "total_registros": total_general,
+        "porcentaje_sin_notas": porcentaje,
+        "limit": limit,
+        "skip": skip,
+        "datos": datos
+    }
