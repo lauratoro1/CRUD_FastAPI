@@ -149,3 +149,13 @@ def activos_porcentaje(db: Session = Depends(get_db)):
 def rangos_edad(db: Session = Depends(get_db)):
     """EXTRA 11: Distribución de personas por rangos de edad"""
     return persona_service.rangos_edad(db)
+
+# NEW: Endpoint for users without notes
+@router.get("/analitica/sin-notas")
+def personas_sin_notas(
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000)
+):
+    """EXTRA 12: Personas que no tienen notas (notes = null)"""
+    return persona_service.personas_sin_notas(db, skip, limit)
