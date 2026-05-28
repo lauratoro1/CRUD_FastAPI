@@ -411,3 +411,54 @@ def top_dominios(db: Session, limite: int = 5) -> Dict[str, Any]:
         "total_usuarios": total,
         "limite_solicitado": limite
     }
+# NEW: Function to get users by birth date
+def buscar_por_rango_fechas(db: Session, fecha_inicio: str, fecha_fin: str) -> Dict[str, Any]:
+    """Busca personas nacidas entre dos fechas"""
+    
+    try:
+        inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+        fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+    except ValueError:
+        return {
+            "error": "Formato de fecha inválido",
+            "mensaje": "Use el formato YYYY-MM-DD (ejemplo: 1990-01-01)",
+            "ejemplo": "/fechas/rango/1990-01-01/2000-12-31"
+        }
+    
+    if inicio > fin:
+        return {
+            "error": "Rango de fechas inválido",
+            "mensaje": "La fecha de inicio debe ser menor que la fecha de fin"
+        }
+    
+    personas = db.query(Persona).filter(
+        Persona.birth_date >= inicio,
+        Persona.birth_date <= fin
+    ).all()
+    
+    hoy = date.today()
+    datos = []
+    for p in personas:
+        edad = hoy.year - p.birth_date.year
+        if (hoy.month, hoy.day) < (p.birth_date.month, p.birth_date.day):
+            edad -= 1
+        
+        datos.append({
+            "id": p.id,
+            "nombre_completo": f"{p.first_name} {p.last_name}",
+            "email": p.email,
+            "telefono": p.phone,
+            "fecha_nacimiento": str(p.birth_date),
+            "edad_actual": edad,
+            "activo": p.is_active,
+            "estado": "Activo" if p.is_active else "Inactivo"
+        })
+    
+    return {
+        "filtro": {
+            "fecha_inicio": str(inicio),
+            "fecha_fin": str(fin),
+            "total_registros": len(personas)
+        },
+        "resultados": datos
+    }
