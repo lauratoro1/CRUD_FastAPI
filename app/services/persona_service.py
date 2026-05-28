@@ -273,3 +273,62 @@ def activos_porcentaje(db: Session) -> Dict[str, Any]:
         "percentage_inactive": round((inactivos / total) * 100, 2),
         "total": total
     }
+
+# New function to calculate age distribution
+def rangos_edad(db: Session) -> Dict[str, Any]:
+    """Distribution of people by age ranges"""
+    hoy = date.today()
+
+    rangos = [
+        {"min": 18, "max": 25, "name": "18-25 (Youth)", "color": "#4CAF50"},
+        {"min": 26, "max": 35, "name": "26-35 (Young Adults)", "color": "#2196F3"},
+        {"min": 36, "max": 50, "name": "36-50 (Adults)", "color": "#FF9800"},
+        {"min": 51, "max": 65, "name": "51-65 (Mature Adults)", "color": "#9C27B0"},
+        {"min": 66, "max": 100, "name": "66+ (Seniors)", "color": "#F44336"}
+    ]
+
+    personas = db.query(Persona).all()
+
+    if not personas:
+        return {
+            "total": 0,
+            "ranges": [],
+            "message": "No users registered"
+        }
+
+    resultado_rangos = []
+    for r in rangos:
+        resultado_rangos.append({
+            "range": r["name"],
+            "min_age": r["min"],
+            "max_age": r["max"],
+            "color": r["color"],
+            "count": 0,
+            "percentage": 0
+        })
+
+    edades = []
+    for p in personas:
+        edad = hoy.year - p.birth_date.year
+        if (hoy.month, hoy.day) < (p.birth_date.month, p.birth_date.day):
+            edad -= 1
+        edades.append(edad)
+
+        for i, r in enumerate(rangos):
+            if r["min"] <= edad <= r["max"]:
+                resultado_rangos[i]["count"] += 1
+                break
+
+    total = len(personas)
+    for r in resultado_rangos:
+        r["percentage"] = round((r["count"] / total) * 100, 2)
+
+    edad_promedio = round(sum(edades) / len(edades)) if edades else 0
+
+    return {
+        "total": total,
+        "average_age": edad_promedio,
+        "min_age": min(edades) if edades else 0,
+        "max_age": max(edades) if edades else 0,
+        "ranges": resultado_rangos
+    }
